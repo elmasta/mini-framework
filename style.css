@@ -1,0 +1,88 @@
+*{
+    margin: 0;
+	padding: 0;
+    list-style-type: none;
+    font: 14px Helvetica Neue,Helvetica,Arial,sans-serif;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: normal;
+    border: none;
+    background-color: white;
+}
+
+h1 {
+    color: #b83f45;
+    font-size: 80px;
+    font-weight: 200;
+}
+
+#main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#root {
+    background: #fff;
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,.2),0 25px 50px 0 rgba(0,0,0,.1);
+    position: relative;
+    width: 30%;
+}
+
+#app-header {
+    display: flex;
+}
+
+.checkboxes {
+    width: 2rem;
+    height: 2rem;
+}
+
+#todo-input-text {
+    box-sizing: border-box;
+    color: inherit;
+    font-family: inherit;
+    font-size: 24px;
+    font-weight: inherit;
+    line-height: 1.4em;
+    margin: 0;
+    padding: 6px;
+    position: relative;
+    width: 100%;
+}
+
+.labels-parent {
+    display: flex;
+    align-items: center;
+}
+
+.todo-label {
+    color: #484848;
+    font-weight: 400;
+    line-height: 1.2;
+    padding-left: 0.5rem;
+    font-size: 24px;
+    transition: color .4s;
+    word-break: break-all;
+}
+
+.stripped {
+    color: aquamarine;
+}
+
+#foot, #ul-footer {
+    display: flex;
+    justify-content: space-between;
+}
+
+#ul-footer {
+    width: 30%;
+}
+
+.to-hide {
+    display: none;
+}
+
+.to-show {
+    display: "";
+}
