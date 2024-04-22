@@ -51,9 +51,15 @@ h1 {
     width: 100%;
 }
 
+#todo-input-text::placeholder {
+    font-style: italic;
+    color: grey;
+}
+
 .labels-parent {
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .todo-label {
@@ -67,7 +73,9 @@ h1 {
 }
 
 .stripped {
-    color: aquamarine;
+    font-style: italic;
+    text-decoration: line-through;
+    color: grey;
 }
 
 #foot, #ul-footer {
@@ -79,10 +87,14 @@ h1 {
     width: 30%;
 }
 
-.to-hide {
-    display: none;
+.delete-button:last-child {
+    margin-left: auto;
 }
 
-.to-show {
-    display: "";
+.labels-parent .delete-button {
+    visibility: hidden;
+}
+
+.labels-parent:hover .delete-button {
+    visibility: visible;
 }

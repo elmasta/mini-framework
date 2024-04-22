@@ -82,10 +82,6 @@ export function GetElementById(node, id) {
 	return null
 }
 
-export function DOMid(id) {
-	return document.getElementById(id)
-}
-
 //not used yet
 // export function getElementByClass(node, elemClass) {
 // 	if (node.props && node.props.class === elemClass) {

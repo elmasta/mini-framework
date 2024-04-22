@@ -1,4 +1,4 @@
-import { Router, AddChildren, AddElement, AddProp, GetElementById, DOMid } from "./framework/main.js"
+import { Router, AddChildren, AddElement, AddProp, GetElementById} from "./framework/main.js"
 
 var elemList = []
 
@@ -109,10 +109,10 @@ function all() {
 
 function active() {
     for (let i in elemList) {
-        if (elemList[i].children[0].children[1].props.className = "todo-label stripped") {
-            elemList[i].children[0].children[1].style = "display:none;"
+        if (elemList[i].children[0].children[1].children[0].props.className = "todo-label stripped") {
+            elemList[i].style = "display:none;"
         } else {
-            elemList[i].children[0].children[1].style = "display:inline-block;"
+            elemList[i].style = "display:inline-block;"
         }
     }
     AddChildren("thisisul", elemList, virtualDOM)
@@ -121,10 +121,10 @@ function active() {
 
 function completed() {
     for (let i in elemList) {
-        if (elemList[i].children[0].children[1].props.className = "todo-label stripped") {
-            elemList[i].children[0].children[1].style = "display:inline-block;"
+        if (elemList[i].children[0].children[1].children[0].props.className = "todo-label stripped") {
+            elemList[i].style = "display:inline-block;"
         } else {
-            elemList[i].children[0].children[1].style = "display:none;"
+            elemList[i].style = "display:none;"
         }
     }
     AddChildren("thisisul", elemList, virtualDOM)
@@ -134,19 +134,59 @@ function completed() {
 function handleAllChecked() {
     let elem = GetElementById(virtualDOM, "all-checkbox")
     elem.props["checked"] = !elem.props["checked"]
-    console.log(virtualDOM)
     if (countUnstriked() === 0) {
+        count = elemList.length
         for (let i in elemList) {
-            elemList[i].children[0].children[1].props.className = "todo-label"
+            elemList[i].children[0].children[1].children[0].props.className = "todo-label"
+            elemList[i].children[0].children[0].props.checked = false
         }
     } else {
+        count = 0
         for (let i in elemList) {
-            elemList[i].children[0].children[1].props.className = "todo-label stripped"
+            elemList[i].children[0].children[1].children[0].props.className = "todo-label stripped"
+            elemList[i].children[0].children[0].props.checked = true
         }
     }
     
     AddChildren("thisisul", elemList, virtualDOM)
+
+    let unstriked = countUnstriked()
+    AddChildren("items-left", [unstriked + " item(s) left!"], virtualDOM)
+
     router.render({component: {render: virtualDOM}})
+}
+
+function handleChecked(e) {
+    let id = e.target.id.substring(8) 
+    let elem = GetElementById(virtualDOM, e.target.id)
+    elem.props["checked"] = !elem.props["checked"]
+
+    let text = GetElementById(virtualDOM, "label"+id)
+    if (elem.props["checked"]) {  
+        text.props.className = "todo-label stripped"
+    } else {
+        text.props.className = "todo-label"
+    }
+
+    let unstriked = countUnstriked()
+    AddChildren("items-left", [unstriked + " item(s) left!"], virtualDOM)
+
+    console.log(unstriked, elemList.length)
+    //change the master checkbox if needed
+    if (unstriked > 0) {
+        AddProp("all-checkbox", {checked:false}, virtualDOM)
+    } else {
+        AddProp("all-checkbox", {checked:true}, virtualDOM)
+    }
+
+    //redirect so I can check which li to show
+    if (window.location.pathname === "/") {
+        all()
+    } else if (window.location.pathname === "/active") {
+        active()
+    } else {
+        completed()
+    }
 }
 
 function handleSubmit(event) {
@@ -159,22 +199,28 @@ function handleSubmit(event) {
             {tag: "div", props: {className: "labels-parent"}, children: [
                 {
                     tag: "input",
-                    props: {type: "checkbox", className: "checkboxes"},
+                    props: {type: "checkbox", id: "checkbox"+count, className: "checkboxes", onchange: handleChecked},
                     children: []
                 },
                 {
-                    tag: "label",
-                    props: {className: "todo-label", id: "label"+count, ondblclick: (e) => {editLabel(e.target)}},
-                    children: [event.target.querySelector('input[type="text"]').value]
-                },
-                {
-                    tag: "input",
-                    props: {id: "editField"+count, style: "display:none;", onblur: (e) => {saveLabel(e.target)}},
-                    children: []
+                    tag: "form",
+                    props: {onsubmit: handleLabelSubmit, className: "li-forms"},
+                    children: [
+                        {
+                            tag: "label",
+                            props: {className: "todo-label", id: "label"+count, ondblclick: (e) => {editLabel(e.target)}},
+                            children: [event.target.querySelector('input[type="text"]').value]
+                        },
+                        {
+                            tag: "input",
+                        props: {type: "text", id: "editField"+count, style: "display:none;", /*onblur: (e) => {saveLabel(e.target)} remove display*/},
+                            children: []
+                        }
+                    ]
                 },
                 {
                     tag: "button",
-                    props: {onclick: () => {completed()}, style: "float:right;"},
+                    props: {onclick: () => {completed()}, className: "delete-button"},
                     children: ["delete"]
                 }
             ]}
@@ -193,30 +239,36 @@ function handleSubmit(event) {
     let unstriked = countUnstriked()
     AddChildren("items-left", [unstriked + " item(s) left!"], virtualDOM)
     router.render({component: {render: virtualDOM}})
+}
 
+function handleLabelSubmit(e) {
+    e.preventDefault()
+    let inputReturn = e.target.querySelector('input[type="text"]')
+    let idToFind = "label" + inputReturn.id.substring(9)
+    AddChildren(idToFind, [inputReturn.value] , virtualDOM)
+    AddProp(idToFind, {style:"display:inline-block;"}, virtualDOM)
+    AddProp(inputReturn.id, {style:"display:none;"}, virtualDOM)
+    router.render({component: {render: virtualDOM}})
 }
 
 function editLabel(label) {
-    let labelText = label.innerText
-    let editField = DOMid("editField"+label.id[label.id.length-1])
-    editField.style.display = "inline-block"
-    editField.value = labelText
-    label.style.display = "none"
-    editField.focus()
-}
 
-function saveLabel(input) {
-    let label = DOMid(input.previousSibling.id)
-    let editedText = input.value
-    label.innerText = editedText
-    input.style.display = "none"
-    label.style.display = "inline-block"
+    AddProp(label.id, {style:"display:none;"}, virtualDOM)
+    
+    let idToFind = "editField" + label.id.substring(5)
+
+    AddProp(idToFind, {style:"display:inline-block;", value:label.innerText}, virtualDOM)
+    //AddChildren(idToFind, [label.innerText] , virtualDOM)
+    router.render({component: {render: virtualDOM}})
+
+    let editField = DOMid(idToFind)
+    editField.focus()
 }
 
 function countUnstriked() {
     let unstrikedCount = 0
     for (let i in elemList) {
-        if (elemList[i].children[0].children[1].props.className === "todo-label") {
+        if (elemList[i].children[0].children[1].children[0].props.className === "todo-label") {
             unstrikedCount++
         }
     }
