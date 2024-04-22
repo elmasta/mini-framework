@@ -1,8 +1,10 @@
-import { Router, AddChildren, AddElement, AddProp, GetElementById} from "./framework/main.js"
+import { Router, AddChildren, AddElement, AddProp, GetElementById, DOMid} from "./framework/main.js"
 
 var elemList = []
 
 var count = 0
+
+var id = 0
 
 var footerComponent = {
     tag: "footer",
@@ -24,7 +26,7 @@ var footerComponent = {
 				]}
             ]
         },
-        {tag: "button", props: {onclick: () => {all()}}, children: ["Clear completed"]}
+        {tag: "button", props: {onclick: () => {clearCompleted()}}, children: ["Clear completed"]}
     ]
 }
 
@@ -101,7 +103,7 @@ const routes = [
 
 function all() {
     for (let i in elemList) {
-        elemList[i].children[0].children[1].style = "display:inline-block;"
+        elemList[i].props.style = "display:block;"
     }
     AddChildren("thisisul", elemList, virtualDOM)
     router.navigate("/")
@@ -109,10 +111,12 @@ function all() {
 
 function active() {
     for (let i in elemList) {
-        if (elemList[i].children[0].children[1].children[0].props.className = "todo-label stripped") {
-            elemList[i].style = "display:none;"
+        if (elemList[i].children[0].children[1].children[0].props.className === "todo-label stripped") {
+            console.log("hi")
+            elemList[i].props.style = "display:none;"
         } else {
-            elemList[i].style = "display:inline-block;"
+            console.log("no")
+            elemList[i].props.style = "display:block;"
         }
     }
     AddChildren("thisisul", elemList, virtualDOM)
@@ -121,10 +125,10 @@ function active() {
 
 function completed() {
     for (let i in elemList) {
-        if (elemList[i].children[0].children[1].children[0].props.className = "todo-label stripped") {
-            elemList[i].style = "display:inline-block;"
+        if (elemList[i].children[0].children[1].children[0].props.className === "todo-label stripped") {
+            elemList[i].props.style = "display:block;"
         } else {
-            elemList[i].style = "display:none;"
+            elemList[i].props.style = "display:none;"
         }
     }
     AddChildren("thisisul", elemList, virtualDOM)
@@ -161,6 +165,7 @@ function handleChecked(e) {
     let elem = GetElementById(virtualDOM, e.target.id)
     elem.props["checked"] = !elem.props["checked"]
 
+    //update labels
     let text = GetElementById(virtualDOM, "label"+id)
     if (elem.props["checked"]) {  
         text.props.className = "todo-label stripped"
@@ -168,10 +173,10 @@ function handleChecked(e) {
         text.props.className = "todo-label"
     }
 
+    //update footer
     let unstriked = countUnstriked()
     AddChildren("items-left", [unstriked + " item(s) left!"], virtualDOM)
 
-    console.log(unstriked, elemList.length)
     //change the master checkbox if needed
     if (unstriked > 0) {
         AddProp("all-checkbox", {checked:false}, virtualDOM)
@@ -194,12 +199,13 @@ function handleSubmit(event) {
 
     //add element to list
     count++
+    id++
     elemList.push(
-        { tag: "li", props: {id: "li" + count}, children: [
+        { tag: "li", props: {id: "li" + id}, children: [
             {tag: "div", props: {className: "labels-parent"}, children: [
                 {
                     tag: "input",
-                    props: {type: "checkbox", id: "checkbox"+count, className: "checkboxes", onchange: handleChecked},
+                    props: {type: "checkbox", id: "checkbox" + id, className: "checkboxes", onchange: handleChecked},
                     children: []
                 },
                 {
@@ -208,19 +214,19 @@ function handleSubmit(event) {
                     children: [
                         {
                             tag: "label",
-                            props: {className: "todo-label", id: "label"+count, ondblclick: (e) => {editLabel(e.target)}},
+                            props: {className: "todo-label", id: "label" + id, ondblclick: (e) => {editLabel(e.target)}},
                             children: [event.target.querySelector('input[type="text"]').value]
                         },
                         {
                             tag: "input",
-                        props: {type: "text", id: "editField"+count, style: "display:none;", /*onblur: (e) => {saveLabel(e.target)} remove display*/},
+                        props: {type: "text", id: "editField" + id, style: "display:none;", /*onblur: (e) => {saveLabel(e.target)} remove display*/},
                             children: []
                         }
                     ]
                 },
                 {
                     tag: "button",
-                    props: {onclick: () => {completed()}, className: "delete-button"},
+                    props: {onclick: clearSelected, id: "delete" + id, className: "delete-button"},
                     children: ["delete"]
                 }
             ]}
@@ -258,7 +264,6 @@ function editLabel(label) {
     let idToFind = "editField" + label.id.substring(5)
 
     AddProp(idToFind, {style:"display:inline-block;", value:label.innerText}, virtualDOM)
-    //AddChildren(idToFind, [label.innerText] , virtualDOM)
     router.render({component: {render: virtualDOM}})
 
     let editField = DOMid(idToFind)
@@ -273,6 +278,70 @@ function countUnstriked() {
         }
     }
     return unstrikedCount
+}
+
+function clearSelected(e) {
+
+    for (let i in elemList) {
+        //console.log(elemList[i].props.id.substring(2), e.target.id.substring(6))
+        if (elemList[i].props.id.substring(2) === e.target.id.substring(6)) {
+            elemList.splice(i, 1)
+        }
+    }
+
+    //update the list on the virtualDOM
+    AddChildren("thisisul", elemList, virtualDOM)
+
+    //update footer
+    let unstriked = countUnstriked()
+    AddChildren("items-left", [unstriked + " item(s) left!"], virtualDOM)
+
+    if (elemList.length === 0) {
+        //remove footer
+        let root = GetElementById(virtualDOM, "root")
+        root.children.splice(2, 1)
+        //hide master checkbox
+        AddProp("all-checkbox", {style:"display:none;"}, virtualDOM)
+    }
+
+    //change the master checkbox if needed
+    if (countUnstriked() > 0 || elemList.length === 0) {
+        AddProp("all-checkbox", {checked:false}, virtualDOM)
+    } else {
+        AddProp("all-checkbox", {checked:true}, virtualDOM)
+    }
+    
+    router.render({component: {render: virtualDOM}})
+}
+
+function clearCompleted() {
+
+    //remove completed elements
+    for (let i = elemList.length-1; i >= 0; i--) {
+        if (elemList[i].children[0].children[1].children[0].props.className === "todo-label stripped") {
+            elemList.splice(i, 1)
+        }
+    }
+
+    //update the list on the virtualDOM
+    AddChildren("thisisul", elemList, virtualDOM)
+
+    //change the master checkbox if needed
+    if (countUnstriked() > 0 || elemList.length === 0) {
+        AddProp("all-checkbox", {checked:false}, virtualDOM)
+    } else {
+        AddProp("all-checkbox", {checked:true}, virtualDOM)
+    }
+
+    if (elemList.length === 0) {
+        //remove footer
+        let root = GetElementById(virtualDOM, "root")
+        root.children.splice(2, 1)
+        //hide master checkbox
+        AddProp("all-checkbox", {style:"display:none;"}, virtualDOM)
+    }
+
+    router.render({component: {render: virtualDOM}})
 }
 
 const router = new Router(routes)

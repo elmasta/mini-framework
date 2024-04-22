@@ -25,13 +25,6 @@ export class Router {
     }
 }
 
-//is used?
-// function resetDom(virtualDOM, idList) {
-// 	for (let i in idList) {
-// 		GetElementById(virtualDOM, idList[i])
-// 	}
-// }
-
 export function AddProp(path, newProp, virtualDOM) {
 	const childrenToProp = GetElementById(virtualDOM, path)
 	if (childrenToProp) {
@@ -82,23 +75,9 @@ export function GetElementById(node, id) {
 	return null
 }
 
-//not used yet
-// export function getElementByClass(node, elemClass) {
-// 	if (node.props && node.props.class === elemClass) {
-// 	  	return node
-// 	}
-  
-// 	if (node.children) {
-// 		for (const child of node.children) {
-// 			const found = getElementById(child, elemClass)
-// 			if (found) {
-// 				return found;
-// 			}
-// 		}
-// 	}
-  
-// 	return null;
-// }
+export function DOMid(id) {
+	return document.getElementById(id)
+}
 
 function createRealElement(virtualNode) {
     if (typeof virtualNode === "string") {
